@@ -1,0 +1,14 @@
+{
+  "name": "mmo2d-server",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^3.0.1"
+  }
+}
