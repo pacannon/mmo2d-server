@@ -4,11 +4,17 @@
   "description": "",
   "scripts": {
     "build": "tsc",
-    "start": "node ./dist/index.js"
+    "start": "npm run build && node ./dist/index.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^3.0.1"
+    "@types/socket.io": "^1.4.36",
+    "@types/three": "^0.92.17",
+    "typescript": "^2.9.2"
+  },
+  "dependencies": {
+    "socket.io": "^2.1.1",
+    "three": "^0.95.0"
   }
 }
