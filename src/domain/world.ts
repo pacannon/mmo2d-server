@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 
-import { Player } from './player';
+import * as Player from './player';
+import { GameStateDelta } from './gameState';
+import * as Vector3 from './vector3';
 
 export type World = {
-  players: Player[];
+  players: Player.Player[];
 };
 
 export const World = (): World => {
@@ -15,27 +17,30 @@ export const World = (): World => {
 export type WorldAction =
   | AddPlayer
   | FilterOutPlayerById
+  | Player.PlayerDisplacement
 
 export interface AddPlayer {
-  kind: 'world.addPlayer',
-  player: Player,
+  readonly kind: 'world.addPlayer',
+  player: Player.Player,
 }
 
 export interface FilterOutPlayerById {
-  kind: 'world.players.filterOut',
+  readonly kind: 'world.players.filterOut',
   id: string,
 }
 
-export const reduce = (action: WorldAction) => (world: World): World => {
+export const reduce = (action: WorldAction, world: World): World => {
   switch (action.kind) {
     case 'world.addPlayer':
       return addPlayer (action.player) (world);
     case 'world.players.filterOut':
       return filterOutPlayerId (action.id) (world);
+    case 'playerDisplacement':
+      return displacePlayer (action) (world);
   }
 }
 
-const addPlayer = (player: Player) => (world: World) => {
+const addPlayer = (player: Player.Player) => (world: World) => {
   return {
     ...world,
     players: [...world.players, player],
@@ -49,9 +54,25 @@ const filterOutPlayerId = (id: string) => (world: World) => {
   };
 };
 
+const displacePlayer = (displacement: Player.PlayerDisplacement) => (world: World) => {
+  return {
+    ...world,
+    players: [...world.players.map(p => {
+      if (p.id === displacement.playerId) {
+
+        return {
+          ...Player.Displace(p, displacement),
+        }
+      }
+      return p;
+    })],
+  };
+};
 
 
-export const runPhysicalSimulationStep = (world: World, delta: number) => {
+
+export const runPhysicalSimulationStep = (world: World, delta: number): GameStateDelta[] => {
+  const gameStateDeltas: GameStateDelta[] = [];
   const speed = 0.1;
   const playerMesh: THREE.Mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
 
@@ -87,26 +108,37 @@ export const runPhysicalSimulationStep = (world: World, delta: number) => {
       playerMesh.translateX(speed);
     }
   
-    const acceleratePlayer = (player: Player) => {
+    const acceleratePlayer = (player: Player.Player) => {
       const netAcceleration = new THREE.Vector3(0, 0, -9.8);
 
       const playerVelocity = new THREE.Vector3(player.velocity.x, player.velocity.y, player.velocity.z);
+      const playerPosition = new THREE.Vector3(player.position.x, player.position.y, player.position.z);
   
-      const newVelocity = playerVelocity.addScaledVector(netAcceleration, delta);
+      let newVelocity = playerVelocity.addScaledVector(netAcceleration, delta);
+      const newPosition = playerPosition.addScaledVector(newVelocity, delta);
+
+      playerMesh.position.copy(newPosition);
   
-      if (playerMesh.position.z > 0 || player.velocity.z > 0) {
-        player.velocity = newVelocity;
-        playerMesh.position.addScaledVector(newVelocity, delta);
-      } else {
-        player.velocity = new THREE.Vector3();
+      if (playerMesh.position.z < 0) {
+        newVelocity.z = 0;
         playerMesh.position.z = 0;
       }
 
-      player.position.x = playerMesh.position.x;
-      player.position.y = playerMesh.position.y;
-      player.position.z = playerMesh.position.z;
+      const displacement: Player.PlayerDisplacement = {
+        kind: 'playerDisplacement',
+        playerId: player.id,
+        dP: Vector3.subtract(playerMesh.position)(player.position),
+        dR: Vector3.subtract(playerMesh.rotation)(player.rotation),
+        dV: Vector3.subtract(newVelocity)(player.velocity),
+      }
+
+      if (Player.shouldEmit(displacement)) {
+        gameStateDeltas.push(displacement);
+      }
     };
   
     acceleratePlayer(player);
   });
+
+  return gameStateDeltas;
 }

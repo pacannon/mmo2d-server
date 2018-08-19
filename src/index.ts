@@ -2,18 +2,19 @@ import * as io from 'socket.io';
 
 import * as World from './domain/world';
 import { setInterval } from 'timers';
-import { GameState, update } from './domain/gameState';
+import * as GameState from './domain/gameState';
 import { ServerEmission } from './domain/serverEmission';
 import { Controller } from './domain/controller';
 
 const client = io.listen(4000).sockets;
 
-let gameState = GameState ();
+let gameState = GameState.GameState ();
 
-let actionQueue: World.WorldAction[] = [];
+let userCommandQueue: UserCommand[] = [];
 
+export type UserCommand = World.AddPlayer | World.FilterOutPlayerById;
 
-export const subscribe = (actionQueue: World.WorldAction[]) => {
+export const subscribe = (userCommandQueue: World.WorldAction[]) => {
   // Connect to Socket.io
   client.on('connection', (socket) => {
     console.log('connected w/ ' + socket.id);
@@ -34,7 +35,7 @@ export const subscribe = (actionQueue: World.WorldAction[]) => {
       player: player,
     }
 
-    actionQueue.push(addPlayer);
+    userCommandQueue.push(addPlayer);
 
     socket.on('disconnect', (_reason) => {
       console.log('disconneded w/ ', socket.id);
@@ -44,7 +45,7 @@ export const subscribe = (actionQueue: World.WorldAction[]) => {
         id: socket.id,
       }
 
-      actionQueue.push(filterOutPlayerById);
+      userCommandQueue.push(filterOutPlayerById);
     });
   });
 };
@@ -67,13 +68,15 @@ const updateClients = (userCommands: World.WorldAction[]) => {
   while (userCommands.length > 0) {
     const action = userCommands[0];
     userCommands.shift();
-    actionQueue.shift();
+    userCommandQueue.shift();
 
     switch (action.kind) {
       case 'world.addPlayer':
           emit([action.player.id], { kind: 'fullUpdate', tick: gameState.tick, world: gameState.world });
         break;
       case 'world.players.filterOut':
+        break;
+      case 'playerDisplacement':
         break;
       default:
         const _exhaustiveCheck: never = action;
@@ -84,11 +87,37 @@ const updateClients = (userCommands: World.WorldAction[]) => {
   }
 }
 
-const TICKRATE = 15;
-subscribe(actionQueue);
+const TICKRATE = 1005;
+subscribe(userCommandQueue);
 setInterval(() => {
-  const userCommands = [...actionQueue];
+  const userCommands = [...userCommandQueue];
 
-  gameState = update(gameState, userCommands);
-  updateClients(userCommands);
+  const userCommandDeltas = GameState.processUserCommands(userCommands);
+  let world: World.World = { ...gameState.world };
+
+  userCommandDeltas.forEach(d => {
+    console.log(JSON.stringify(d));
+    world = World.reduce(d, world);
+  });
+
+  const gameStateDeltas = World.runPhysicalSimulationStep(world, TICKRATE / 1000);
+
+  gameStateDeltas.forEach(d => {
+    world = World.reduce(d, world);
+  });
+
+  const allDeltas = [...userCommandDeltas, ...gameStateDeltas];
+  
+  gameState = {
+    tick: gameState.tick + 1,
+    world: world,
+    worldActions: {
+      ...gameState.worldActions,
+      [gameState.tick + 1]: allDeltas,
+    }
+  };
+
+  console.log(JSON.stringify(gameState));
+
+  updateClients(allDeltas);
 }, TICKRATE);

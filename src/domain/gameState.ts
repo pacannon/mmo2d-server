@@ -1,4 +1,6 @@
-import { World, WorldAction, reduce } from './world';
+import { World, WorldAction, reduce, runPhysicalSimulationStep } from './world';
+import { PlayerDisplacement } from './player';
+import { UserCommand } from '../index';
 
 export type GameState = {
   tick: number;
@@ -18,7 +20,27 @@ export const GameState = (
   }
 }
 
-export const update = (gameState: GameState, actionQueue: WorldAction[]): GameState => {
+export type GameStateDelta = PlayerDisplacement | UserCommand;
+
+export const processUserCommand = (userCommand: UserCommand): GameStateDelta[] => {
+  switch (userCommand.kind) {
+    case 'world.addPlayer':
+    case 'world.players.filterOut':
+      const retVal: GameStateDelta[] = [userCommand];
+        return retVal;
+    default:
+      const _exhaustiveCheck: never = userCommand;
+      return _exhaustiveCheck;
+  }
+};
+
+export const processUserCommands = (userCommands: UserCommand[]): GameStateDelta[] => {
+  const deltas = userCommands.map(processUserCommand).reduce((a, b) => [...a, ...b], []);
+  
+  return deltas;
+};
+
+export const update = (gameState: GameState, delta: number, actionQueue: WorldAction[]): GameState => {
   actionQueue = [...actionQueue];
   const oldWorld = JSON.stringify(gameState.world);
   const dirtyTick = gameState.tick + 1;
@@ -39,7 +61,7 @@ export const update = (gameState: GameState, actionQueue: WorldAction[]): GameSt
   
       console.group();
   
-      dirtyWorld = reduce(action)(dirtyWorld);
+      dirtyWorld = reduce(action, dirtyWorld);
       dirtyWorldActions.push(action);
   
       const newWorld = JSON.stringify(dirtyWorld);
