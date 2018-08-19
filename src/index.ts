@@ -51,15 +51,15 @@ export const subscribe = (userCommandQueue: World.WorldAction[]) => {
 };
 
 const emit = (toWhom: string[] | 'all', serverEmission: ServerEmission) => {
-  console.log('===EMITTING TO ' + JSON.stringify(toWhom) + '===');
-  console.log(JSON.stringify(serverEmission));
+  // console.log('===EMITTING TO ' + JSON.stringify(toWhom) + '===');
+  // console.log(JSON.stringify(serverEmission));
   if (toWhom === 'all') {
     client.emit('serverEmission', serverEmission);
   } else {
     toWhom.forEach(playerId => client.sockets[playerId].emit('serverEmission', serverEmission));
   }
-  console.log('===DONE EMITTING===');
-  console.log();
+  // console.log('===DONE EMITTING===');
+  // console.log();
 };
 
 const updateClients = (userCommands: World.WorldAction[]) => {
@@ -87,7 +87,7 @@ const updateClients = (userCommands: World.WorldAction[]) => {
   }
 }
 
-const TICKRATE = 1005;
+const TICKRATE = 15;
 subscribe(userCommandQueue);
 setInterval(() => {
   const userCommands = [...userCommandQueue];
@@ -96,7 +96,6 @@ setInterval(() => {
   let world: World.World = { ...gameState.world };
 
   userCommandDeltas.forEach(d => {
-    console.log(JSON.stringify(d));
     world = World.reduce(d, world);
   });
 
@@ -107,17 +106,13 @@ setInterval(() => {
   });
 
   const allDeltas = [...userCommandDeltas, ...gameStateDeltas];
-  
-  gameState = {
-    tick: gameState.tick + 1,
-    world: world,
-    worldActions: {
-      ...gameState.worldActions,
-      [gameState.tick + 1]: allDeltas,
-    }
-  };
 
-  console.log(JSON.stringify(gameState));
+  gameState.tick++;
+  gameState.world = world;
+  
+  if (allDeltas.length > 0) {
+    gameState.worldActions[gameState.tick] = allDeltas;
+  }
 
   updateClients(allDeltas);
 }, TICKRATE);
