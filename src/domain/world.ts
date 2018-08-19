@@ -18,6 +18,7 @@ export type WorldAction =
   | AddPlayer
   | FilterOutPlayerById
   | Player.PlayerDisplacement
+  | Player.PlayerControllerAction
 
 export interface AddPlayer {
   readonly kind: 'world.addPlayer',
@@ -35,8 +36,10 @@ export const reduce = (action: WorldAction, world: World): World => {
       return addPlayer (action.player) (world);
     case 'world.players.filterOut':
       return filterOutPlayerId (action.id) (world);
-    case 'playerDisplacement':
+    case 'player.displacement':
       return displacePlayer (action) (world);
+    case 'player.controllerAction':
+      return controlPlayer (action) (world);
   }
 }
 
@@ -54,14 +57,14 @@ const filterOutPlayerId = (id: string) => (world: World) => {
   };
 };
 
-const displacePlayer = (displacement: Player.PlayerDisplacement) => (world: World) => {
+const displacePlayer = (displacement: Player.PlayerDisplacement) => (world: World): World => {
   return {
     ...world,
     players: [...world.players.map(p => {
       if (p.id === displacement.playerId) {
 
         return {
-          ...Player.Displace(p, displacement),
+          ...Player.reduce(p, displacement),
         }
       }
       return p;
@@ -69,7 +72,20 @@ const displacePlayer = (displacement: Player.PlayerDisplacement) => (world: Worl
   };
 };
 
+const controlPlayer = (control: Player.PlayerControllerAction) => (world: World): World => {
+  return {
+    ...world,
+    players: [...world.players.map(p => {
+      if (p.id === control.playerId) {
 
+        return {
+          ...Player.reduce(p, control),
+        }
+      }
+      return p;
+    })],
+  };
+};
 
 export const runPhysicalSimulationStep = (world: World, delta: number): GameStateDelta[] => {
   const gameStateDeltas: GameStateDelta[] = [];
@@ -83,30 +99,6 @@ export const runPhysicalSimulationStep = (world: World, delta: number): GameStat
     playerMesh.rotation.x = player.rotation.x;
     playerMesh.rotation.y = player.rotation.y;
     playerMesh.rotation.z = player.rotation.z;
-  
-    if (player.controller.yawLeft) {
-      playerMesh.rotateZ(speed * 0.3);
-    }
-  
-    if (player.controller.yawRight) {
-      playerMesh.rotateZ(-speed * 0.3);
-    }
-  
-    if (player.controller.moveForward) {
-      playerMesh.translateY(speed);
-    }
-  
-    if (player.controller.moveBackward) {
-      playerMesh.translateY(-speed);
-    }
-  
-    if (player.controller.strafeLeft) {
-      playerMesh.translateX(-speed);
-    }
-  
-    if (player.controller.strafeRight) {
-      playerMesh.translateX(speed);
-    }
   
     const acceleratePlayer = (player: Player.Player) => {
       const netAcceleration = new THREE.Vector3(0, 0, -9.8);
@@ -123,9 +115,39 @@ export const runPhysicalSimulationStep = (world: World, delta: number): GameStat
         newVelocity.z = 0;
         playerMesh.position.z = 0;
       }
+      
+      if (player.controller.yawLeft) {
+        console.log('yawLeft')
+        playerMesh.rotateZ(speed * 0.3);
+      }
+    
+      if (player.controller.yawRight) {
+        console.log('yawRight')
+        playerMesh.rotateZ(-speed * 0.3);
+      }
+    
+      if (player.controller.moveForward) {
+        console.log('moveForward')
+        playerMesh.translateY(speed);
+      }
+    
+      if (player.controller.moveBackward) {
+        console.log('moveBackward')
+        playerMesh.translateY(-speed);
+      }
+    
+      if (player.controller.strafeLeft) {
+        console.log('strafeLeft')
+        playerMesh.translateX(-speed);
+      }
+    
+      if (player.controller.strafeRight) {
+        console.log('strafeRight')
+        playerMesh.translateX(speed);
+      }
 
       const displacement: Player.PlayerDisplacement = {
-        kind: 'playerDisplacement',
+        kind: 'player.displacement',
         playerId: player.id,
         dP: Vector3.subtract(playerMesh.position)(player.position),
         dR: Vector3.subtract(playerMesh.rotation)(player.rotation),

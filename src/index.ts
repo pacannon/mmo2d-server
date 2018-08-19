@@ -4,7 +4,8 @@ import * as World from './domain/world';
 import { setInterval } from 'timers';
 import * as GameState from './domain/gameState';
 import { ServerEmission } from './domain/serverEmission';
-import { Controller } from './domain/controller';
+import { Controller, ControllerAction } from './domain/controller';
+import * as Player from './domain/player';
 
 const client = io.listen(4000).sockets;
 
@@ -12,9 +13,9 @@ let gameState = GameState.GameState ();
 
 let userCommandQueue: UserCommand[] = [];
 
-export type UserCommand = World.AddPlayer | World.FilterOutPlayerById;
+export type UserCommand = World.AddPlayer | World.FilterOutPlayerById | Player.PlayerControllerAction;
 
-export const subscribe = (userCommandQueue: World.WorldAction[]) => {
+export const subscribe = (userCommandQueue: UserCommand[]) => {
   // Connect to Socket.io
   client.on('connection', (socket) => {
     console.log('connected w/ ' + socket.id);
@@ -36,6 +37,10 @@ export const subscribe = (userCommandQueue: World.WorldAction[]) => {
     }
 
     userCommandQueue.push(addPlayer);
+
+    socket.on('clientEmission', (data: ControllerAction) => {
+      userCommandQueue.push({kind: 'player.controllerAction', playerId: socket.id, action: data});
+    });
 
     socket.on('disconnect', (_reason) => {
       console.log('disconneded w/ ', socket.id);
@@ -62,7 +67,7 @@ const emit = (toWhom: string[] | 'all', serverEmission: ServerEmission) => {
   // console.log();
 };
 
-const updateClients = (userCommands: World.WorldAction[]) => {
+const updateClients = (userCommands: GameState.GameStateDelta[]) => {
   userCommands = [...userCommands];
 
   while (userCommands.length > 0) {
@@ -76,18 +81,20 @@ const updateClients = (userCommands: World.WorldAction[]) => {
         break;
       case 'world.players.filterOut':
         break;
-      case 'playerDisplacement':
+      case 'player.displacement':
+        break;
+      case 'player.controllerAction':
         break;
       default:
         const _exhaustiveCheck: never = action;
         return _exhaustiveCheck;
     }
     
-    emit('all', { kind: 'gameStateDelta', tick: gameState.tick, worldAction: action });
+    emit('all', { kind: 'gameStateDeltaEmission', tick: gameState.tick, gsd: action });
   }
 }
 
-const TICKRATE = 15;
+export const TICKRATE = 15;
 subscribe(userCommandQueue);
 setInterval(() => {
   const userCommands = [...userCommandQueue];

@@ -1,8 +1,9 @@
-import { World, WorldAction } from './world';
+import { World } from './world';
+import { GameStateDelta } from './gameState';
 
 export type ServerEmission =
   | FullUpdate
-  | GameStateDelta
+  | GameStateDeltaEmission
 
 interface FullUpdate {
   kind: 'fullUpdate';
@@ -10,8 +11,8 @@ interface FullUpdate {
   world: World;
 }
 
-interface GameStateDelta {
-  kind: 'gameStateDelta';
+interface GameStateDeltaEmission {
+  kind: 'gameStateDeltaEmission';
   tick: number;
-  worldAction: WorldAction;
+  gsd: GameStateDelta;
 }

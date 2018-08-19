@@ -17,3 +17,73 @@ export const Controller = () => {
     yawRight: false,
   };
 }
+
+export type ControllerAction =
+  | Jump
+  | MoveForward
+  | MoveBackward
+  | StrafeLeft
+  | StrafeRight
+  | YawLeft
+  | YawRight
+
+interface Jump {
+  kind: 'jump';
+}
+
+interface MoveForward {
+  kind: 'moveForward';
+  mapTo: boolean;
+}
+    
+interface MoveBackward {
+  kind: 'moveBackward';
+  mapTo: boolean;
+}
+
+interface StrafeLeft {
+  kind: 'strafeLeft';
+  mapTo: boolean;
+}
+
+interface StrafeRight {
+  kind: 'strafeRight';
+  mapTo: boolean;
+}
+
+interface YawLeft {
+  kind: 'yawLeft';
+  mapTo: boolean;
+}
+
+interface YawRight {
+  kind: 'yawRight';
+  mapTo: boolean;
+}
+
+export const reduce = (controller: Controller, action: ControllerAction): Controller => {
+  controller = { ...controller };
+
+  switch (action.kind) {
+    case 'moveForward':
+        controller.moveForward = action.mapTo;
+      break;
+    case 'moveBackward':
+        controller.moveBackward = action.mapTo;
+      break;
+    case 'strafeLeft':
+        controller.strafeLeft = action.mapTo;
+      break;
+    case 'strafeRight':
+        controller.strafeRight = action.mapTo;
+      break;
+    case 'yawLeft':
+        controller.yawLeft = action.mapTo;
+      break;
+    case 'yawRight':
+        controller.yawRight = action.mapTo;
+      break;
+  }
+
+  return controller;
+}
