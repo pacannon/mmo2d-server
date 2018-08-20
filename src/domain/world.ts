@@ -148,7 +148,6 @@ export const runPhysicalSimulationStep = (world: World, delta: number): GameStat
       }
 
       if (Player.shouldEmit(displacement)) {
-        console.log(JSON.stringify(displacement, undefined, 2));
         gameStateDeltas.push(displacement);
       }
     };

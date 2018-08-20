@@ -56,15 +56,15 @@ export const subscribe = (userCommandQueue: UserCommand[]) => {
 };
 
 const emit = (toWhom: string[] | 'all', serverEmission: ServerEmission) => {
-  console.log('===EMITTING TO ' + JSON.stringify(toWhom) + '===');
-  console.log(JSON.stringify(serverEmission));
+  //console.log('===EMITTING TO ' + JSON.stringify(toWhom) + '===');
+  //console.log(JSON.stringify(serverEmission));
   if (toWhom === 'all') {
     client.emit('serverEmission', serverEmission);
   } else {
     toWhom.forEach(playerId => client.sockets[playerId].emit('serverEmission', serverEmission));
   }
-  console.log('===DONE EMITTING===');
-  console.log();
+  //console.log('===DONE EMITTING===');
+  //console.log();
 };
 
 const updateClients = (userCommands: GameState.GameStateDelta[]) => {
