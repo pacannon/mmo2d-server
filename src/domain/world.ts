@@ -89,9 +89,8 @@ const controlPlayer = (control: Player.PlayerControllerAction) => (world: World)
 
 export const runPhysicalSimulationStep = (world: World, delta: number): GameStateDelta[] => {
   const gameStateDeltas: GameStateDelta[] = [];
-  const speed = 0.1;
+  const speed = 10;
   const playerMesh: THREE.Mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
-
   world.players.forEach(player => {
     playerMesh.position.x = player.position.x;
     playerMesh.position.y = player.position.y;
@@ -117,33 +116,27 @@ export const runPhysicalSimulationStep = (world: World, delta: number): GameStat
       }
       
       if (player.controller.yawLeft) {
-        console.log('yawLeft')
-        playerMesh.rotateZ(speed * 0.3);
+        playerMesh.rotateZ(speed * 0.3 * delta);
       }
     
       if (player.controller.yawRight) {
-        console.log('yawRight')
-        playerMesh.rotateZ(-speed * 0.3);
+        playerMesh.rotateZ(-speed * 0.3 * delta);
       }
     
       if (player.controller.moveForward) {
-        console.log('moveForward')
-        playerMesh.translateY(speed);
+        playerMesh.translateY(speed * delta);
       }
     
       if (player.controller.moveBackward) {
-        console.log('moveBackward')
-        playerMesh.translateY(-speed);
+        playerMesh.translateY(-speed * delta);
       }
     
       if (player.controller.strafeLeft) {
-        console.log('strafeLeft')
-        playerMesh.translateX(-speed);
+        playerMesh.translateX(-speed * delta);
       }
     
       if (player.controller.strafeRight) {
-        console.log('strafeRight')
-        playerMesh.translateX(speed);
+        playerMesh.translateX(speed * delta);
       }
 
       const displacement: Player.PlayerDisplacement = {
@@ -155,6 +148,7 @@ export const runPhysicalSimulationStep = (world: World, delta: number): GameStat
       }
 
       if (Player.shouldEmit(displacement)) {
+        console.log(JSON.stringify(displacement, undefined, 2));
         gameStateDeltas.push(displacement);
       }
     };

@@ -26,7 +26,7 @@ export const subscribe = (userCommandQueue: UserCommand[]) => {
     const player = {
       id: socket.id,
       controller: Controller (),
-      position: { x:randomMagnitude * Math.cos(randomTheta), y: randomMagnitude * Math.sin(randomTheta), z: 5 },
+      position: { x:randomMagnitude * Math.cos(randomTheta), y: randomMagnitude * Math.sin(randomTheta), z: 20 },
       rotation: { x: 0, y: 0, z: 0 },
       velocity: { x: 0, y: 0, z: 0 }
     };
@@ -56,15 +56,15 @@ export const subscribe = (userCommandQueue: UserCommand[]) => {
 };
 
 const emit = (toWhom: string[] | 'all', serverEmission: ServerEmission) => {
-  // console.log('===EMITTING TO ' + JSON.stringify(toWhom) + '===');
-  // console.log(JSON.stringify(serverEmission));
+  console.log('===EMITTING TO ' + JSON.stringify(toWhom) + '===');
+  console.log(JSON.stringify(serverEmission));
   if (toWhom === 'all') {
     client.emit('serverEmission', serverEmission);
   } else {
     toWhom.forEach(playerId => client.sockets[playerId].emit('serverEmission', serverEmission));
   }
-  // console.log('===DONE EMITTING===');
-  // console.log();
+  console.log('===DONE EMITTING===');
+  console.log();
 };
 
 const updateClients = (userCommands: GameState.GameStateDelta[]) => {
@@ -94,7 +94,6 @@ const updateClients = (userCommands: GameState.GameStateDelta[]) => {
   }
 }
 
-export const TICKRATE = 15;
 subscribe(userCommandQueue);
 setInterval(() => {
   const userCommands = [...userCommandQueue];
@@ -106,7 +105,7 @@ setInterval(() => {
     world = World.reduce(d, world);
   });
 
-  const gameStateDeltas = World.runPhysicalSimulationStep(world, TICKRATE / 1000);
+  const gameStateDeltas = World.runPhysicalSimulationStep(world, GameState.TICKRATE / 1000);
 
   gameStateDeltas.forEach(d => {
     world = World.reduce(d, world);
@@ -122,4 +121,4 @@ setInterval(() => {
   }
 
   updateClients(allDeltas);
-}, TICKRATE);
+}, GameState.TICKRATE);
