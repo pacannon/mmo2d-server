@@ -1,7 +1,7 @@
 import * as io from 'socket.io';
+import { performance } from 'perf_hooks';
 
 import * as World from './domain/world';
-import { setInterval } from 'timers';
 import * as GameState from './domain/gameState';
 import { ServerEmission } from './domain/serverEmission';
 import { Controller, ControllerAction } from './domain/controller';
@@ -95,7 +95,8 @@ const updateClients = (userCommands: GameState.GameStateDelta[]) => {
 }
 
 subscribe(userCommandQueue);
-setInterval(() => {
+setTimeout(function tick () {
+	const start = performance.now();
   const userCommands = [...userCommandQueue];
 
   const userCommandDeltas = GameState.processUserCommands(userCommands);
@@ -121,4 +122,5 @@ setInterval(() => {
   }
 
   updateClients(allDeltas);
+	setTimeout(tick, GameState.TICKRATE - (performance.now() - start));
 }, GameState.TICKRATE);
