@@ -2,7 +2,7 @@ import { World, WorldAction, reduce } from './world';
 import { PlayerDisplacement } from './player';
 import { UserCommand } from '../index';
 
-export const TICKRATE = 200;
+export const TICKRATE = 15;
 
 export type GameState = {
   tick: number;

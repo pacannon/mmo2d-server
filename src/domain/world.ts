@@ -89,7 +89,7 @@ const controlPlayer = (control: Player.PlayerControllerAction) => (world: World)
 
 export const runPhysicalSimulationStep = (world: World, delta: number): GameStateDelta[] => {
   const gameStateDeltas: GameStateDelta[] = [];
-  const speed = 10;
+  const speed = 5;
   const playerMesh: THREE.Mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
   world.players.forEach(player => {
     playerMesh.position.x = player.position.x;
