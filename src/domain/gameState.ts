@@ -1,4 +1,4 @@
-import { World, WorldAction, reduce } from './world';
+import { World } from './world';
 import { PlayerDisplacement } from './player';
 import { UserCommand } from '../index';
 
@@ -7,18 +7,18 @@ export const TICKRATE = 15;
 export type GameState = {
   tick: number;
   world: World;
-  worldActions: { [tick: number]: GameStateDelta[] };
+  deltas: GameStateDelta[];
 }
 
 export const GameState = (
   tick: number = 0,
   world: World = World (),
-  worldActions: { [tick: number]: WorldAction[] } = {}
+  deltas: GameStateDelta[] = []
 ): GameState => {
   return {
     tick,
     world,
-    worldActions,
+    deltas,
   }
 }
 

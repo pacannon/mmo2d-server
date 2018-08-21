@@ -9,11 +9,15 @@ import * as Player from './domain/player';
 
 const client = io.listen(4000).sockets;
 
-let gameState = GameState.GameState ();
+let gameStates = [GameState.GameState ()];
 
 let userCommandQueue: UserCommand[] = [];
 
 export type UserCommand = World.AddPlayer | World.FilterOutPlayerById | Player.PlayerControllerAction;
+
+const latestGameState = () => {
+  return gameStates[gameStates.length - 1];
+}
 
 export const subscribe = (userCommandQueue: UserCommand[]) => {
   // Connect to Socket.io
@@ -67,30 +71,14 @@ const emit = (toWhom: string[] | 'all', serverEmission: ServerEmission) => {
   //console.log();
 };
 
-const updateClients = (userCommands: GameState.GameStateDelta[]) => {
-  userCommands = [...userCommands];
+const updateClients = (gameStates: GameState.GameState[]) => {
+  gameStates = [...gameStates];
 
-  while (userCommands.length > 0) {
-    const action = userCommands[0];
-    userCommands.shift();
-    userCommandQueue.shift();
-
-    switch (action.kind) {
-      case 'world.addPlayer':
-          emit([action.player.id], { kind: 'fullUpdate', tick: gameState.tick, world: gameState.world });
-        break;
-      case 'world.players.filterOut':
-        break;
-      case 'player.displacement':
-        break;
-      case 'player.controllerAction':
-        break;
-      default:
-        const _exhaustiveCheck: never = action;
-        return _exhaustiveCheck;
-    }
+  while (gameStates.length > 0) {
+    const gameState = gameStates[0];
+    gameStates.shift();
     
-    emit('all', { kind: 'gameStateDeltaEmission', tick: gameState.tick, gsd: action });
+    emit('all', { kind: 'fullUpdate',  gameState: gameState });
   }
 }
 
@@ -101,9 +89,10 @@ subscribe(userCommandQueue);
 setTimeout(function tick () {
 	const start = performance.now();
   const userCommands = [...userCommandQueue];
+  userCommandQueue.length = 0;
 
   const userCommandDeltas = GameState.processUserCommands(userCommands);
-  let world: World.World = { ...gameState.world };
+  let world: World.World = { ...latestGameState().world };
 
   userCommandDeltas.forEach(d => {
     world = World.reduce(d, world);
@@ -113,6 +102,7 @@ setTimeout(function tick () {
   lastFrameTimeMs = start;
 
   const allDeltas = [...userCommandDeltas];
+  const gameStatesBuffer: GameState.GameState[] = [];
 
   while (delta >= GameState.TICKRATE) {
     const gameStateDeltas = World.runPhysicalSimulationStep(world, GameState.TICKRATE / 1000);
@@ -122,16 +112,19 @@ setTimeout(function tick () {
       allDeltas.push(d);
     });
 
-    gameState.tick++;
-    gameState.world = world;
-    
-    if (allDeltas.length > 0) {
-      gameState.worldActions[gameState.tick] = allDeltas;
-    }
+    gameStates.push({
+      tick: latestGameState().tick + 1,
+      world: world,
+      deltas: [...allDeltas],
+    });
+
+    gameStatesBuffer.push(latestGameState());
+
+    allDeltas.length = 0;
 
     delta -= GameState.TICKRATE;
   }
 
-  updateClients(allDeltas);
+  updateClients(gameStatesBuffer);
 	setTimeout(tick, GameState.TICKRATE - (performance.now() - start));
 }, GameState.TICKRATE);

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import * as Player from './player';
-import { GameStateDelta } from './gameState';
+import * as GameState from './gameState';
 import * as Vector3 from './vector3';
 
 export type World = {
@@ -87,8 +87,8 @@ const controlPlayer = (control: Player.PlayerControllerAction) => (world: World)
   };
 };
 
-export const runPhysicalSimulationStep = (world: World, delta: number): GameStateDelta[] => {
-  const gameStateDeltas: GameStateDelta[] = [];
+export const runPhysicalSimulationStep = (world: World, delta: number): GameState.GameStateDelta[] => {
+  const gameStateDeltas: GameState.GameStateDelta[] = [];
   const speed = 5;
   const playerMesh: THREE.Mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
   world.players.forEach(player => {
