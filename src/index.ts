@@ -94,6 +94,9 @@ const updateClients = (userCommands: GameState.GameStateDelta[]) => {
   }
 }
 
+let delta = 0;
+let lastFrameTimeMs = performance.now();
+
 subscribe(userCommandQueue);
 setTimeout(function tick () {
 	const start = performance.now();
@@ -106,19 +109,27 @@ setTimeout(function tick () {
     world = World.reduce(d, world);
   });
 
-  const gameStateDeltas = World.runPhysicalSimulationStep(world, GameState.TICKRATE / 1000);
+  delta += start - lastFrameTimeMs;
+  lastFrameTimeMs = start;
 
-  gameStateDeltas.forEach(d => {
-    world = World.reduce(d, world);
-  });
+  const allDeltas = [...userCommandDeltas];
 
-  const allDeltas = [...userCommandDeltas, ...gameStateDeltas];
+  while (delta >= GameState.TICKRATE) {
+    const gameStateDeltas = World.runPhysicalSimulationStep(world, GameState.TICKRATE / 1000);
 
-  gameState.tick++;
-  gameState.world = world;
-  
-  if (allDeltas.length > 0) {
-    gameState.worldActions[gameState.tick] = allDeltas;
+    gameStateDeltas.forEach(d => {
+      world = World.reduce(d, world);
+      allDeltas.push(d);
+    });
+
+    gameState.tick++;
+    gameState.world = world;
+    
+    if (allDeltas.length > 0) {
+      gameState.worldActions[gameState.tick] = allDeltas;
+    }
+
+    delta -= GameState.TICKRATE;
   }
 
   updateClients(allDeltas);
