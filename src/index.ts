@@ -9,7 +9,7 @@ import * as Player from './domain/player';
 
 const client = io.listen(4000).sockets;
 
-let gameStates = [GameState.GameState ()];
+const gameStates = [GameState.GameState ()];
 
 let userCommandQueue: UserCommand[] = [];
 
@@ -84,6 +84,7 @@ const updateClients = (gameStates: GameState.GameState[]) => {
 
 let delta = 0;
 let lastFrameTimeMs = performance.now();
+let clearExpiredStates = false;
 
 subscribe(userCommandQueue);
 setTimeout(function tick () {
@@ -104,8 +105,8 @@ setTimeout(function tick () {
   const allDeltas = [...userCommandDeltas];
   const gameStatesBuffer: GameState.GameState[] = [];
 
-  while (delta >= GameState.TICKRATE) {
-    const gameStateDeltas = World.runPhysicalSimulationStep(world, GameState.TICKRATE / 1000);
+  while (delta >= GameState.TICKRATE_MS) {
+    const gameStateDeltas = World.runPhysicalSimulationStep(world, GameState.TICKRATE_MS / 1000);
 
     gameStateDeltas.forEach(d => {
       world = World.reduce(d, world);
@@ -118,13 +119,19 @@ setTimeout(function tick () {
       deltas: [...allDeltas],
     });
 
+    if (clearExpiredStates) {
+      gameStates.shift();
+    } else if ((gameStates.length-1) * GameState.TICKRATE_MS > GameState.EXPIRE_AFTER_MS) {
+      clearExpiredStates = true;
+    }
+
     gameStatesBuffer.push(latestGameState());
 
     allDeltas.length = 0;
 
-    delta -= GameState.TICKRATE;
+    delta -= GameState.TICKRATE_MS;
   }
 
   updateClients(gameStatesBuffer);
-	setTimeout(tick, GameState.TICKRATE - (performance.now() - start));
-}, GameState.TICKRATE);
+	setTimeout(tick, GameState.TICKRATE_MS - (performance.now() - start));
+}, GameState.TICKRATE_MS);
