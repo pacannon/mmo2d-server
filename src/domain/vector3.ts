@@ -20,6 +20,14 @@ export const subtract = (a: Vector3) => (b: Vector3) => {
   }
 }
 
+export const scale = (scaleFactor: number) => (v: Vector3): Vector3 => {
+  return {
+    x: scaleFactor * v.x,
+    y: scaleFactor * v.y,
+    z: scaleFactor * v.z,
+  }
+}
+
 export const eq = (a: Vector3) => (b: Vector3) => {
   return a.x === b.x && a.y === b.y && a.z === b.z;
 }

@@ -30,7 +30,7 @@ export const subscribe = (userCommandQueue: UserCommand[]) => {
     const player = {
       id: socket.id,
       controller: Controller (),
-      position: { x:randomMagnitude * Math.cos(randomTheta), y: randomMagnitude * Math.sin(randomTheta), z: 20 },
+      position: { x:randomMagnitude * Math.cos(randomTheta), y: randomMagnitude * Math.sin(randomTheta), z: 30 },
       rotation: { x: 0, y: 0, z: 0 },
       velocity: { x: 0, y: 0, z: 0 }
     };
