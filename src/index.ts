@@ -42,8 +42,8 @@ export const subscribe = (userCommandQueue: UserCommand[]) => {
 
     userCommandQueue.push(addPlayer);
 
-    socket.on('clientEmission', (data: ControllerAction) => {
-      userCommandQueue.push({kind: 'player.controllerAction', playerId: socket.id, action: data});
+    socket.on('clientEmission', (data: UserCommand) => {
+      userCommandQueue.push(data);
     });
 
     socket.on('disconnect', (_reason) => {
@@ -59,16 +59,19 @@ export const subscribe = (userCommandQueue: UserCommand[]) => {
   });
 };
 
-const emit = (toWhom: string[] | 'all', serverEmission: ServerEmission) => {
-  //console.log('===EMITTING TO ' + JSON.stringify(toWhom) + '===');
-  //console.log(JSON.stringify(serverEmission));
-  if (toWhom === 'all') {
+const emit = (serverEmission: ServerEmission) => {
+  const LOG_EMIT = false;
+  //setTimeout(function() {
+    if (LOG_EMIT) {
+      console.log('===EMITTING===');
+      console.log(JSON.stringify(serverEmission));
+    }
     client.emit('serverEmission', serverEmission);
-  } else {
-    toWhom.forEach(playerId => client.sockets[playerId].emit('serverEmission', serverEmission));
-  }
-  //console.log('===DONE EMITTING===');
-  //console.log();
+    if (LOG_EMIT) {
+      console.log('===DONE EMITTING===');
+      console.log();
+    }
+ // }, 0);
 };
 
 const updateClients = (gameStates: GameState.GameState[]) => {
@@ -78,7 +81,7 @@ const updateClients = (gameStates: GameState.GameState[]) => {
     const gameState = gameStates[0];
     gameStates.shift();
     
-    emit('all', { kind: 'fullUpdate',  gameState: gameState });
+    emit({ kind: 'fullUpdate',  gameState: gameState });
   }
 }
 
@@ -105,7 +108,11 @@ setTimeout(function tick () {
   const allDeltas = [...userCommandDeltas];
   const gameStatesBuffer: GameState.GameState[] = [];
 
+  let count = 0;
   while (delta >= GameState.TICKRATE_MS) {
+    if (count++ > 1) {
+      console.log(count);
+    }
     const gameStateDeltas = World.runPhysicalSimulationStep(world, GameState.TICKRATE_MS / 1000);
 
     gameStateDeltas.forEach(d => {

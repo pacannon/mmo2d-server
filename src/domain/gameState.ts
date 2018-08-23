@@ -3,7 +3,7 @@ import { PlayerDisplacement } from './player';
 import { UserCommand } from '../index';
 
 export const TICKRATE_MS = 15;
-export const EXPIRE_AFTER_MS = 1000;
+export const EXPIRE_AFTER_MS = TICKRATE_MS * 100;
 
 export type GameState = {
   tick: number;
