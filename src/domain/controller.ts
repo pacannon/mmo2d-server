@@ -19,6 +19,7 @@ export const Controller = () => {
 }
 
 export type ControllerAction =
+  | DropFocus
   | Jump
   | MoveForward
   | MoveBackward
@@ -29,6 +30,10 @@ export type ControllerAction =
 
 interface Jump {
   kind: 'jump';
+}
+
+interface DropFocus {
+  kind: 'dropFocus';
 }
 
 interface MoveForward {
@@ -65,6 +70,9 @@ export const reduce = (controller: Controller, action: ControllerAction): Contro
   controller = { ...controller };
 
   switch (action.kind) {
+    case 'dropFocus':
+        controller = { ... Controller () };
+      break;
     case 'moveForward':
         controller.moveForward = action.mapTo;
       break;
@@ -83,6 +91,11 @@ export const reduce = (controller: Controller, action: ControllerAction): Contro
     case 'yawRight':
         controller.yawRight = action.mapTo;
       break;
+    case 'jump':
+      break;
+    default:
+      const _exhaustiveCheck: never = action;
+      return _exhaustiveCheck;
   }
 
   return controller;
