@@ -1,11 +1,20 @@
 import { performance } from 'perf_hooks';
+import * as express from 'express';
 
 import * as World from './domain/world';
 import * as GameState from './domain/gameState';
 import * as SocketService from './domain/socketService';
 import * as Config from './config';
 
+let app = express.default();
+app.get('/', function(_request: express.Request, response: express.Response) {
+  response.sendFile('./mmo2d-client/dist/index.html', {root: '../'});
+});
 
+app.use(express.static('../mmo2d-client/dist/'));
+app.listen(3000);
+
+console.log('app listening...')
 
 const gameStates = [GameState.GameState ()];
 

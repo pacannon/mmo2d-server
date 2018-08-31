@@ -45,7 +45,16 @@ const control = (player: Player, action: PlayerControllerAction): Player => {
           z: 3,
         }
       };
-    } else {
+    } else if (action.action.kind === 'setRotation') {
+      return {
+        ...player,
+        rotation: {
+          x: 0,
+          y: 0,
+          z: action.action.z,
+        },
+      };
+    }else {
       return {
         ...player,
         controller: Controller.reduce(player.controller, action.action),

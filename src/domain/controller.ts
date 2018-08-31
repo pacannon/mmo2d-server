@@ -27,6 +27,7 @@ export type ControllerAction =
   | StrafeRight
   | YawLeft
   | YawRight
+  | SetRotation
 
 interface Jump {
   kind: 'jump';
@@ -66,6 +67,11 @@ interface YawRight {
   mapTo: boolean;
 }
 
+interface SetRotation {
+  kind: 'setRotation';
+  z: number;
+}
+
 export const reduce = (controller: Controller, action: ControllerAction): Controller => {
   controller = { ...controller };
 
@@ -91,6 +97,7 @@ export const reduce = (controller: Controller, action: ControllerAction): Contro
     case 'yawRight':
         controller.yawRight = action.mapTo;
       break;
+    case 'setRotation':
     case 'jump':
       break;
     default:
