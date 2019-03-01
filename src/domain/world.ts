@@ -3,13 +3,16 @@ import * as THREE from 'three';
 import * as Player from './player';
 import * as GameState from './gameState';
 import * as Vector3 from './vector3';
+import * as Block from './block';
 
 export type World = {
+  blocks: Block.Block[];
   players: Player.Player[];
 };
 
 export const World = (): World => {
   return {
+    blocks: [{ position: { x: -2, y: 2, z: 3 } }, { position: { x: -1, y: 2, z: 3 } }],
     players: [],
   };
 };

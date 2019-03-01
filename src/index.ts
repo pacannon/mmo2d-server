@@ -10,6 +10,9 @@ let app = express.default();
 app.get('/', function(_request: express.Request, response: express.Response) {
   response.sendFile('./mmo2d-client/dist/index.html', {root: '../'});
 });
+app.get('/textures/blocks/brick.png', function(_request: express.Request, response: express.Response) {
+  response.sendFile('./mmo2d-client/src/textures/blocks/brick.png', {root: '../'});
+});
 
 app.use(express.static('../mmo2d-client/dist/'));
 app.listen(3000);
