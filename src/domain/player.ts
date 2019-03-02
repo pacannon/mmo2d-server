@@ -36,13 +36,13 @@ export const reduce = (player: Player, action: PlayerAction): Player => {
 
 const control = (player: Player, action: PlayerControllerAction): Player => {
   if (action.playerId === player.id) {
-    if (action.action.kind === 'jump' && player.position.z === 0) {
+    if (action.action.kind === 'jump' && player.position.y === 0) {
       return {
         ...player,
         velocity: {
           x: player.velocity.x,
-          y: player.velocity.y,
-          z: 3,
+          y: 3,
+          z: player.velocity.z,
         }
       };
     } else if (action.action.kind === 'setRotation') {
@@ -50,8 +50,8 @@ const control = (player: Player, action: PlayerControllerAction): Player => {
         ...player,
         rotation: {
           x: 0,
-          y: 0,
-          z: action.action.z,
+          y: action.action.y,
+          z: 0,
         },
       };
     }else {

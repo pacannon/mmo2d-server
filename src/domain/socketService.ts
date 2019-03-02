@@ -22,7 +22,7 @@ export const subscribe = (userCommandQueue: GameState.UserCommand[]) => {
     const player = {
       id: socket.id,
       controller: Controller.Controller (),
-      position: { x:randomMagnitude * Math.cos(randomTheta), y: randomMagnitude * Math.sin(randomTheta), z: 40 },
+      position: { x:randomMagnitude * Math.cos(randomTheta), y: 40, z: randomMagnitude * Math.sin(randomTheta) },
       rotation: { x: 0, y: 0, z: 0 },
       velocity: { x: 0, y: 0, z: 0 }
     };

@@ -12,7 +12,7 @@ export type World = {
 
 export const World = (): World => {
   return {
-    blocks: [{ position: { x: -2, y: 2, z: 3 } }, { position: { x: -1, y: 2, z: 3 } }],
+    blocks: [{ position: { x: -2, y: 0, z: 3 } }, { position: { x: -1, y: 0, z: 3 } }, { position: { x: 1, y: 0, z: 3 } }, { position: { x: 1, y: 0, z: 5 } }],
     players: [],
   };
 };
@@ -103,7 +103,7 @@ export const runPhysicalSimulationStep = (world: World, delta: number): GameStat
     playerMesh.rotation.z = player.rotation.z;
   
     const acceleratePlayer = (player: Player.Player) => {
-      const netAcceleration = new THREE.Vector3(0, 0, -9.8);
+      const netAcceleration = new THREE.Vector3(0, -9.8, 0);
 
       const playerVelocity = new THREE.Vector3(player.velocity.x, player.velocity.y, player.velocity.z);
       const playerPosition = new THREE.Vector3(player.position.x, player.position.y, player.position.z);
@@ -113,25 +113,25 @@ export const runPhysicalSimulationStep = (world: World, delta: number): GameStat
 
       playerMesh.position.copy(newPosition);
   
-      if (playerMesh.position.z < 0) {
-        newVelocity.z = 0;
-        playerMesh.position.z = 0;
+      if (playerMesh.position.y < 0) {
+        newVelocity.y = 0;
+        playerMesh.position.y = 0;
       }
       
       if (player.controller.yawLeft) {
-        playerMesh.rotateZ(speed * 0.3 * delta);
+        playerMesh.rotateY(speed * 0.3 * delta);
       }
     
       if (player.controller.yawRight) {
-        playerMesh.rotateZ(-speed * 0.3 * delta);
+        playerMesh.rotateY(-speed * 0.3 * delta);
       }
     
       if (player.controller.moveForward) {
-        playerMesh.translateY(speed * delta);
+        playerMesh.translateZ(-speed * delta);
       }
     
       if (player.controller.moveBackward) {
-        playerMesh.translateY(-speed * delta);
+        playerMesh.translateZ(speed * delta);
       }
     
       if (player.controller.strafeLeft) {

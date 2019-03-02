@@ -69,7 +69,7 @@ interface YawRight {
 
 interface SetRotation {
   kind: 'setRotation';
-  z: number;
+  y: number;
 }
 
 export const reduce = (controller: Controller, action: ControllerAction): Controller => {
