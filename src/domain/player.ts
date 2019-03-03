@@ -36,7 +36,7 @@ export const reduce = (player: Player, action: PlayerAction): Player => {
 
 const control = (player: Player, action: PlayerControllerAction): Player => {
   if (action.playerId === player.id) {
-    if (action.action.kind === 'jump' && player.position.y === 0) {
+    if (action.action.kind === 'jump' && Math.abs(player.position.y) <= 0.0001) {
       return {
         ...player,
         velocity: {
